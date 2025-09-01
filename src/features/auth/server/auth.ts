@@ -1,5 +1,3 @@
-// export const runtime = "nodejs";
-
 import { v4 as uuid } from "uuid";
 import { encode as defaultEncode } from "next-auth/jwt";
 
@@ -15,6 +13,7 @@ const adapter = PrismaAdapter(db);
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter,
+  session: { strategy: "database" },
   providers: [
     GitHub,
     Credentials({
