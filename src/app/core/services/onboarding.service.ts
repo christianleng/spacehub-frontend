@@ -3,9 +3,6 @@
 import {
   checkTenantSlugAvailable,
   createTenantFromOnboarding,
-  updateTenantContactAddress,
-  updateTenantSettings,
-  completeTenantOnboarding,
 } from "../server/actions/onboarding.action";
 
 export type CreateOrganizationPayload = {
@@ -20,20 +17,6 @@ export type CreateOrganizationPayload = {
   region: string;
   postalCode: string;
   country: string;
-  timezone: string;
-};
-
-export type UpdateContactAddressPayload = {
-  phone: string;
-  addressLine1: string;
-  addressLine2?: string;
-  city: string;
-  region: string;
-  postalCode: string;
-  country: string;
-};
-
-export type UpdateSettingsPayload = {
   timezone: string;
 };
 
@@ -69,37 +52,6 @@ export class OnboardingService {
       );
     }
     return { orgId: res.tenantId };
-  }
-
-  async updateContactAndAddress(
-    orgId: string,
-    payload: UpdateContactAddressPayload
-  ): Promise<void> {
-    const res = await updateTenantContactAddress(orgId, payload);
-    if (!res.ok) {
-      throw new Error(
-        "UpdateContactAndAddress failed: " + JSON.stringify(res.error)
-      );
-    }
-  }
-
-  async updateSettings(
-    orgId: string,
-    payload: UpdateSettingsPayload
-  ): Promise<void> {
-    const res = await updateTenantSettings(orgId, payload);
-    if (!res.ok) {
-      throw new Error("UpdateSettings failed: " + JSON.stringify(res.error));
-    }
-  }
-
-  async completeOnboarding(orgId: string): Promise<void> {
-    const res = await completeTenantOnboarding(orgId);
-    if (!res.ok) {
-      throw new Error(
-        "CompleteOnboarding failed: " + JSON.stringify(res.error)
-      );
-    }
   }
 }
 
