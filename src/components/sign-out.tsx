@@ -9,7 +9,7 @@ export default function SignOut() {
   };
 
   return (
-    <Button type="submit" onClick={handleSignOut} className="w-full">
+    <Button type="submit" onClick={handleSignOut}>
       Sign out
     </Button>
   );

@@ -12,13 +12,17 @@ export default async function OnboardingPage() {
   if (!needsOnboarding) redirect("/");
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-semibold mb-2">Bienvenue !</h1>
-      <p className="text-muted-foreground mb-6">
-        Configurer votre espace de coworking.
-      </p>
+    <div className="p-8 flex flex-col gap-20">
+      <div className="flex justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold mb-2">Bienvenue !</h1>
+          <p className="text-muted-foreground mb-6">
+            Configurer votre espace de coworking.
+          </p>
+        </div>
+        <SignOut />
+      </div>
       <OnboardingForm />
-      <SignOut />
     </div>
   );
 }

@@ -25,13 +25,13 @@ export default observer(function OnboardingForm() {
   ) =>
     onboardingStore.setSettings({ ...onboardingStore.data.settings, ...patch });
 
-  const goPrev = () => {
+  const handlePreviousStep = () => {
     if (onboardingStore.step > 0) {
       onboardingStore.setStep((onboardingStore.step - 1) as StepIndex);
     }
   };
 
-  const goNext = async () => {
+  const handleNextStep = async () => {
     if (onboardingStore.step === 0) {
       await onboardingStore.submitStep1(onboardingStore.data.identity);
       if (!onboardingStore.error) onboardingStore.setStep(1);
@@ -44,7 +44,8 @@ export default observer(function OnboardingForm() {
     }
   };
 
-  const finish = async () => {
+  const handleSubmitFormOnboarding = async () => {
+    onboardingStore.isLoading = true;
     await onboardingStore.submitStep3(onboardingStore.data.settings);
     if (!onboardingStore.error) {
       window.location.href = "/";
@@ -52,13 +53,13 @@ export default observer(function OnboardingForm() {
   };
 
   return (
-    <div className="max-w-xl mx-auto space-y-6">
-      <div className="flex items-center gap-2">
+    <div className="flex justify-between max-w-4xl mx-auto gap-8">
+      <div className="flex flex-col gap-40 h-full">
         {STEPS.map((label, i) => (
-          <div key={label} className="flex items-center gap-2">
+          <div key={label} className="flex  gap-3 relative">
             <div
               className={cn(
-                "w-8 h-8 rounded-full border flex items-center justify-center text-sm",
+                "w-8 h-8 rounded-full border flex items-center justify-center text-sm z-10",
                 i <= onboardingStore.step
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted"
@@ -66,131 +67,143 @@ export default observer(function OnboardingForm() {
             >
               {i + 1}
             </div>
+
             <span
               className={cn(
-                "text-sm",
-                i === onboardingStore.step && "font-medium"
+                "text-3xl",
+                i === onboardingStore.step ? "font-bold" : "opacity-50"
               )}
             >
               {label}
             </span>
+
             {i < STEPS.length - 1 && (
-              <div className="w-8 h-px bg-border mx-2" />
+              <div className="absolute left-4 top-8 w-px h-40 bg-border" />
             )}
           </div>
         ))}
       </div>
 
-      {onboardingStore.error && (
-        <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-          {onboardingStore.error.message}
+      <div className="flex justify-between flex-col w-full">
+        <div>
+          {onboardingStore.step === 0 && (
+            <div className="grid gap-3">
+              <Input
+                placeholder="Nom du commerce *"
+                value={onboardingStore.data.identity.name}
+                onChange={(e) => updateIdentity({ name: e.target.value })}
+              />
+              <Input
+                placeholder="Raison sociale (optionnel)"
+                value={onboardingStore.data.identity.legalName}
+                onChange={(e) => updateIdentity({ legalName: e.target.value })}
+              />
+              <Input
+                placeholder="Téléphone (optionnel)"
+                value={onboardingStore.data.contact.phone}
+                onChange={(e) => updateContact({ phone: e.target.value })}
+              />
+              <Input
+                placeholder="Site web (optionnel)"
+                value={onboardingStore.data.identity.website}
+                onChange={(e) => updateIdentity({ website: e.target.value })}
+              />
+              <Input
+                placeholder="Slug (ex: paris-centre) *"
+                value={onboardingStore.data.identity.slug}
+                onChange={(e) => updateIdentity({ slug: e.target.value })}
+              />
+            </div>
+          )}
+
+          {onboardingStore.step === 1 && (
+            <div className="grid gap-3">
+              <Input
+                placeholder="Adresse ligne 1 *"
+                value={onboardingStore.data.contact.addressLine1}
+                onChange={(e) =>
+                  updateContact({ addressLine1: e.target.value })
+                }
+              />
+              <Input
+                placeholder="Adresse ligne 2"
+                value={onboardingStore.data.contact.addressLine2}
+                onChange={(e) =>
+                  updateContact({ addressLine2: e.target.value })
+                }
+              />
+              <Input
+                placeholder="Ville *"
+                value={onboardingStore.data.contact.city}
+                onChange={(e) => updateContact({ city: e.target.value })}
+              />
+              <Input
+                placeholder="Région/État"
+                value={onboardingStore.data.contact.region}
+                onChange={(e) => updateContact({ region: e.target.value })}
+              />
+              <Input
+                placeholder="Code postal *"
+                value={onboardingStore.data.contact.postalCode}
+                onChange={(e) => updateContact({ postalCode: e.target.value })}
+              />
+              <Input
+                placeholder="Pays (ISO-2, ex: FR) *"
+                value={onboardingStore.data.contact.country}
+                onChange={(e) =>
+                  updateContact({ country: e.target.value.toUpperCase() })
+                }
+              />
+            </div>
+          )}
+
+          {onboardingStore.step === 2 && (
+            <div className="grid gap-3">
+              <Input
+                placeholder="Fuseau horaire (IANA) *"
+                value={onboardingStore.data.settings.timezone}
+                onChange={(e) => updateSettings({ timezone: e.target.value })}
+              />
+            </div>
+          )}
         </div>
-      )}
 
-      {onboardingStore.step === 0 && (
-        <div className="grid gap-3">
-          <Input
-            placeholder="Nom du commerce *"
-            value={onboardingStore.data.identity.name}
-            onChange={(e) => updateIdentity({ name: e.target.value })}
-          />
-          <Input
-            placeholder="Raison sociale (optionnel)"
-            value={onboardingStore.data.identity.legalName}
-            onChange={(e) => updateIdentity({ legalName: e.target.value })}
-          />
-          <Input
-            placeholder="Téléphone (optionnel)"
-            value={onboardingStore.data.contact.phone}
-            onChange={(e) => updateContact({ phone: e.target.value })}
-          />
-          <Input
-            placeholder="Site web (optionnel)"
-            value={onboardingStore.data.identity.website}
-            onChange={(e) => updateIdentity({ website: e.target.value })}
-          />
-          <Input
-            placeholder="Slug (ex: paris-centre) *"
-            value={onboardingStore.data.identity.slug}
-            onChange={(e) => updateIdentity({ slug: e.target.value })}
-          />
+        <div className="flex gap-2 flex-col">
+          {onboardingStore.error && (
+            <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              {onboardingStore.error.message}
+            </div>
+          )}
+
+          <div className="flex justify-between">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={onboardingStore.step === 0 || onboardingStore.isLoading}
+              onClick={handlePreviousStep}
+            >
+              Précédent
+            </Button>
+
+            {onboardingStore.step < STEPS.length - 1 ? (
+              <Button
+                type="button"
+                onClick={handleNextStep}
+                disabled={onboardingStore.isLoading}
+              >
+                {onboardingStore.isLoading ? "..." : "Suivant"}
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                onClick={handleSubmitFormOnboarding}
+                disabled={onboardingStore.isLoading}
+              >
+                {onboardingStore.isLoading ? "..." : "Terminer"}
+              </Button>
+            )}
+          </div>
         </div>
-      )}
-
-      {onboardingStore.step === 1 && (
-        <div className="grid gap-3">
-          <Input
-            placeholder="Adresse ligne 1 *"
-            value={onboardingStore.data.contact.addressLine1}
-            onChange={(e) => updateContact({ addressLine1: e.target.value })}
-          />
-          <Input
-            placeholder="Adresse ligne 2"
-            value={onboardingStore.data.contact.addressLine2}
-            onChange={(e) => updateContact({ addressLine2: e.target.value })}
-          />
-          <Input
-            placeholder="Ville *"
-            value={onboardingStore.data.contact.city}
-            onChange={(e) => updateContact({ city: e.target.value })}
-          />
-          <Input
-            placeholder="Région/État"
-            value={onboardingStore.data.contact.region}
-            onChange={(e) => updateContact({ region: e.target.value })}
-          />
-          <Input
-            placeholder="Code postal *"
-            value={onboardingStore.data.contact.postalCode}
-            onChange={(e) => updateContact({ postalCode: e.target.value })}
-          />
-          <Input
-            placeholder="Pays (ISO-2, ex: FR) *"
-            value={onboardingStore.data.contact.country}
-            onChange={(e) =>
-              updateContact({ country: e.target.value.toUpperCase() })
-            }
-          />
-        </div>
-      )}
-
-      {onboardingStore.step === 2 && (
-        <div className="grid gap-3">
-          <Input
-            placeholder="Fuseau horaire (IANA) *"
-            value={onboardingStore.data.settings.timezone}
-            onChange={(e) => updateSettings({ timezone: e.target.value })}
-          />
-        </div>
-      )}
-
-      <div className="flex justify-between">
-        <Button
-          type="button"
-          variant="outline"
-          disabled={onboardingStore.step === 0 || onboardingStore.isLoading}
-          onClick={goPrev}
-        >
-          Précédent
-        </Button>
-
-        {onboardingStore.step < STEPS.length - 1 ? (
-          <Button
-            type="button"
-            onClick={goNext}
-            disabled={onboardingStore.isLoading}
-          >
-            {onboardingStore.isLoading ? "..." : "Suivant"}
-          </Button>
-        ) : (
-          <Button
-            type="button"
-            onClick={finish}
-            disabled={onboardingStore.isLoading}
-          >
-            {onboardingStore.isLoading ? "..." : "Terminer"}
-          </Button>
-        )}
       </div>
     </div>
   );
