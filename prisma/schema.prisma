@@ -29,13 +29,10 @@ model User {
 
   // Liens multi-tenant
   memberships Membership[]
-  bookings    Booking[]    @relation("BookingMember")
 
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  Tenant       Tenant[]
-  Subscription Subscription[]
-  AuditLog     AuditLog[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Tenant    Tenant[]
 }
 
 model Account {
@@ -108,6 +105,16 @@ enum BookingStatus {
   CANCELLED
 }
 
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
 model Tenant {
   id        String  @id @default(cuid())
   slug      String  @unique // pour {tenant}.domain.tld
@@ -130,18 +137,10 @@ model Tenant {
   createdByUserId String
   createdBy       User   @relation(fields: [createdByUserId], references: [id], onDelete: Restrict)
 
-  // Relations
-  memberships   Membership[]
-  resources     Resource[]
-  bookings      Booking[]
-  subscriptions Subscription[]
-  payments      Payment[]
-  invoices      Invoice[]
-  webhookEvents WebhookEvent[]
-  auditLogs     AuditLog[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  OpeningHour OpeningHour[]
+  Membership  Membership[]
 
   @@index([slug])
 }
@@ -161,117 +160,25 @@ model Membership {
   @@index([userId])
 }
 
-model Resource {
-  id        String       @id @default(cuid())
+model OpeningHour {
+  id        String     @id @default(cuid())
   tenantId  String
-  name      String
-  type      ResourceType
-  capacity  Int          @default(1)
-  timezone  String?
-  isActive  Boolean      @default(true)
-  createdAt DateTime     @default(now())
+  dayOfWeek DayOfWeek?
+  // Pour une date specifique, comme un jour feries
+  date      DateTime?
 
-  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  bookings Booking[]
+  startTime   String?
+  endTime     String?
+  capacity    Int?
+  description String?
+  isActive    Boolean @default(true)
 
-  @@unique([tenantId, name])
-  @@index([tenantId, type])
-}
-
-model Booking {
-  id           String        @id @default(cuid())
-  tenantId     String
-  resourceId   String
-  memberId     String
-  title        String?
-  startUtc     DateTime
-  endUtc       DateTime
-  timezone     String
-  recurrenceId String?
-  status       BookingStatus @default(CONFIRMED)
-  idempoKey    String?       @unique
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  resource Resource @relation(fields: [resourceId], references: [id], onDelete: Restrict)
-  member   User     @relation("BookingMember", fields: [memberId], references: [id], onDelete: Restrict)
-
-  @@index([tenantId, resourceId, startUtc, endUtc])
-  @@index([tenantId, memberId, startUtc])
-}
-
-model Subscription {
-  id             String   @id @default(cuid())
-  tenantId       String
-  userId         String? // owner/manager
-  stripeCustomer String
-  stripeSubId    String?  @unique
-  status         String
-  createdAt      DateTime @default(now())
-
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  user   User?  @relation(fields: [userId], references: [id])
-
-  @@index([tenantId, status])
-}
-
-model Invoice {
-  id              String   @id @default(cuid())
-  tenantId        String
-  stripeInvoiceId String   @unique
-  total           Int
-  currency        String   @default("eur")
-  periodStart     DateTime
-  periodEnd       DateTime
-  status          String
-  createdAt       DateTime @default(now())
-
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
-  @@index([tenantId, periodStart, periodEnd])
-  @@index([tenantId, status])
-}
-
-model Payment {
-  id              String   @id @default(cuid())
-  tenantId        String
-  stripePaymentId String   @unique
-  amount          Int
-  currency        String   @default("eur")
-  createdAt       DateTime @default(now())
-
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
-  @@index([tenantId, createdAt])
-}
-
-model WebhookEvent {
-  id        String   @id // utilise l'event.id Stripe pour idempotency
-  tenantId  String?
-  source    String
-  eventType String
-  payload   Json
-  status    String   @default("RECEIVED") // PROCESSED/FAILED
-  attempts  Int      @default(0)
-  createdAt DateTime @default(now())
-
-  tenant Tenant? @relation(fields: [tenantId], references: [id])
-
-  @@index([tenantId, eventType, status])
-}
-
-model AuditLog {
-  id        String   @id @default(cuid())
-  tenantId  String
-  userId    String?
-  action    String
-  meta      Json?
-  createdAt DateTime @default(now())
-
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  user   User?  @relation(fields: [userId], references: [id])
-
-  @@index([tenantId, createdAt])
+  @@unique([tenantId, dayOfWeek, date])
+  @@index([tenantId, dayOfWeek])
+  @@index([tenantId, date])
 }
