@@ -15,7 +15,7 @@ Construit avec **Next.js 14 (App Router)**, **TypeScript**, **Prisma/Postgres**,
 
 - **Frontend** : [Next.js 14](https://nextjs.org/) (App Router, RSC, Route Handlers)
 - **Langage** : TypeScript
-- **UI** : TailwindCSS + shadcn/ui + react-hook-form + zod
+- **UI** : TailwindCSS + shadcn/ui + zod
 - **State** : MobX (`onboarding.store.ts`, etc.)
 - **DB** : PostgreSQL + Prisma ORM
 - **Cache/Jobs** : Redis (BullMQ/Inngest possible)
