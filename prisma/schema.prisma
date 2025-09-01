@@ -15,6 +15,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ---------- Auth / NextAuth (tes modèles existants, inchangés) ----------
 model User {
   id            String          @id @default(cuid())
   name          String?
@@ -24,11 +25,17 @@ model User {
   image         String?
   accounts      Account[]
   sessions      Session[]
-  // Optional for WebAuthn support
-  Authenticator Authenticator[]
+  Authenticator Authenticator[] // webauthn optionnel
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  // Liens multi-tenant
+  memberships Membership[]
+  bookings    Booking[]    @relation("BookingMember")
+
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  Tenant       Tenant[]
+  Subscription Subscription[]
+  AuditLog     AuditLog[]
 }
 
 model Account {
@@ -70,7 +77,6 @@ model VerificationToken {
   @@id([identifier, token])
 }
 
-// Optional for WebAuthn support
 model Authenticator {
   credentialID         String  @unique
   userId               String
@@ -84,4 +90,188 @@ model Authenticator {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([userId, credentialID])
+}
+
+enum Role {
+  siteAdmin
+  manager
+  member
+}
+
+enum ResourceType {
+  ROOM
+  DESK
+}
+
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
+}
+
+model Tenant {
+  id        String  @id @default(cuid())
+  slug      String  @unique // pour {tenant}.domain.tld
+  name      String // nom commercial
+  legalName String? // raison sociale
+  phone     String?
+  website   String?
+
+  addressLine1 String
+  addressLine2 String?
+  city         String
+  region       String?
+  postalCode   String
+  country      String
+  timezone     String  @default("Europe/Paris")
+
+  stripeAccountId  String? @unique
+  stripeCustomerId String?
+
+  createdByUserId String
+  createdBy       User   @relation(fields: [createdByUserId], references: [id], onDelete: Restrict)
+
+  // Relations
+  memberships   Membership[]
+  resources     Resource[]
+  bookings      Booking[]
+  subscriptions Subscription[]
+  payments      Payment[]
+  invoices      Invoice[]
+  webhookEvents WebhookEvent[]
+  auditLogs     AuditLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+}
+
+model Membership {
+  id        String   @id @default(cuid())
+  userId    String
+  tenantId  String
+  role      Role
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tenantId])
+  @@index([tenantId, role])
+  @@index([userId])
+}
+
+model Resource {
+  id        String       @id @default(cuid())
+  tenantId  String
+  name      String
+  type      ResourceType
+  capacity  Int          @default(1)
+  timezone  String?
+  isActive  Boolean      @default(true)
+  createdAt DateTime     @default(now())
+
+  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  bookings Booking[]
+
+  @@unique([tenantId, name])
+  @@index([tenantId, type])
+}
+
+model Booking {
+  id           String        @id @default(cuid())
+  tenantId     String
+  resourceId   String
+  memberId     String
+  title        String?
+  startUtc     DateTime
+  endUtc       DateTime
+  timezone     String
+  recurrenceId String?
+  status       BookingStatus @default(CONFIRMED)
+  idempoKey    String?       @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  resource Resource @relation(fields: [resourceId], references: [id], onDelete: Restrict)
+  member   User     @relation("BookingMember", fields: [memberId], references: [id], onDelete: Restrict)
+
+  @@index([tenantId, resourceId, startUtc, endUtc])
+  @@index([tenantId, memberId, startUtc])
+}
+
+model Subscription {
+  id             String   @id @default(cuid())
+  tenantId       String
+  userId         String? // owner/manager
+  stripeCustomer String
+  stripeSubId    String?  @unique
+  status         String
+  createdAt      DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User?  @relation(fields: [userId], references: [id])
+
+  @@index([tenantId, status])
+}
+
+model Invoice {
+  id              String   @id @default(cuid())
+  tenantId        String
+  stripeInvoiceId String   @unique
+  total           Int
+  currency        String   @default("eur")
+  periodStart     DateTime
+  periodEnd       DateTime
+  status          String
+  createdAt       DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, periodStart, periodEnd])
+  @@index([tenantId, status])
+}
+
+model Payment {
+  id              String   @id @default(cuid())
+  tenantId        String
+  stripePaymentId String   @unique
+  amount          Int
+  currency        String   @default("eur")
+  createdAt       DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
+}
+
+model WebhookEvent {
+  id        String   @id // utilise l'event.id Stripe pour idempotency
+  tenantId  String?
+  source    String
+  eventType String
+  payload   Json
+  status    String   @default("RECEIVED") // PROCESSED/FAILED
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, eventType, status])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  tenantId  String
+  userId    String?
+  action    String
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User?  @relation(fields: [userId], references: [id])
+
+  @@index([tenantId, createdAt])
 }
