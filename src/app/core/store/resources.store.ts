@@ -87,7 +87,6 @@ export class ResourcesStore implements IResourcesStore {
   getResourceById = (id: string) => this.resources[id];
 
   setDrawerOpen = (open: boolean) => {
-    console.log("test");
     this.drawerOpen = open;
   };
 
