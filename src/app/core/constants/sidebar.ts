@@ -1,18 +1,12 @@
 import {
-  IconCamera,
   IconChartBar,
   IconDashboard,
   IconDatabase,
-  IconFileAi,
-  IconFileDescription,
-  IconFileWord,
-  IconFolder,
   IconHelp,
   IconListDetails,
   IconReport,
   IconSearch,
   IconSettings,
-  IconUsers,
 } from "@tabler/icons-react";
 
 import type { Icon as TablerIcon } from "@tabler/icons-react";
@@ -55,8 +49,8 @@ export const SIDEBAR_ITEMS: SidebarItems = {
   },
   navMain: [
     { title: "Dashboard", url: "/dashboard", icon: IconDashboard }, // Vue synthèse : réservations du jour, revenus, taux d’occupation.
-    { title: "Reservations", url: "#", icon: IconListDetails }, // Gestion des bookings (salles, bureaux, équipements)
-    { title: "Resources", url: "#", icon: IconChartBar }, // Configuration des ressources (ajouter salle, bureau, capacity)
+    { title: "Reservations", url: "/reservations", icon: IconListDetails }, // Gestion des bookings (salles, bureaux, équipements)
+    { title: "Resources", url: "/resources", icon: IconChartBar }, // Configuration des ressources (ajouter salle, bureau, capacity)
   ],
   navSecondary: [
     { title: "Settings", url: "#", icon: IconSettings },

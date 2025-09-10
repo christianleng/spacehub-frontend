@@ -7,6 +7,6 @@ import { StoreContext } from "@/lib/store-provider";
 export function useOnboarding(): OnboardingStore {
   const context = useContext(StoreContext);
   if (!context)
-    throw new Error("useTopology must be used within a StoreProvider");
+    throw new Error("useOnboarding must be used within a StoreProvider");
   return context.onboarding;
 }
