@@ -28,6 +28,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import setToast, { TOAST_TYPE } from "@/components/toast";
 
 const CreateResources = observer(() => {
   const isMobile = useIsMobile();
@@ -52,10 +53,24 @@ const CreateResources = observer(() => {
   });
 
   const onSubmit = async (values: IResourceForm) => {
-    const created = await resourcesStore.createResource(values);
-    if (created) {
-      reset();
-      resourcesStore.setDrawerOpen(false);
+    try {
+      const created = await resourcesStore.createResource(values);
+      console.log("CREATED ::=>", created);
+      if (created) {
+        reset();
+        resourcesStore.setDrawerOpen(false);
+        setToast({
+          type: TOAST_TYPE.SUCCESS,
+          title: "Ressource créée",
+          message: "Votre ressource a bien été ajoutée !",
+        });
+      }
+    } catch (err) {
+      setToast({
+        type: TOAST_TYPE.ERROR,
+        title: "Erreur",
+        message: "Impossible de créer la ressource.",
+      });
     }
   };
 

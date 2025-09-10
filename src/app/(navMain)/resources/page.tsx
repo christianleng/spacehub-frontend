@@ -30,7 +30,9 @@ const Resources = observer(() => {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => resourcesStore.setDrawerOpen(true)}
+          onClick={() => {
+            resourcesStore.setDrawerOpen(true);
+          }}
         >
           <IconPlus />
           <span className="hidden lg:inline">Add Section</span>

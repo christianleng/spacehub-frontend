@@ -6,6 +6,7 @@ import Providers from "./providers";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/features/sidebar/app-sidebar";
 import { SiteHeader } from "@/features/sidebar/site-header";
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   title: "Coworking App",
@@ -32,6 +33,7 @@ export default function RootLayout({
           <SidebarInset>
             <SiteHeader />
             <Providers>{children}</Providers>
+            <Toaster position="bottom-right" richColors />
           </SidebarInset>
         </SidebarProvider>
       </body>
