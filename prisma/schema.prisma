@@ -105,16 +105,6 @@ enum BookingStatus {
   CANCELLED
 }
 
-enum DayOfWeek {
-  MONDAY
-  TUESDAY
-  WEDNESDAY
-  THURSDAY
-  FRIDAY
-  SATURDAY
-  SUNDAY
-}
-
 model Tenant {
   id        String  @id @default(cuid())
   slug      String  @unique // pour {tenant}.domain.tld
@@ -161,11 +151,9 @@ model Membership {
 }
 
 model OpeningHour {
-  id        String     @id @default(cuid())
-  tenantId  String
-  dayOfWeek DayOfWeek?
-  // Pour une date specifique, comme un jour feries
-  date      DateTime?
+  id          String   @id @default(cuid())
+  tenantId    String
+  date        DateTime?
 
   startTime   String?
   endTime     String?
@@ -173,12 +161,10 @@ model OpeningHour {
   description String?
   isActive    Boolean @default(true)
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  @@unique([tenantId, dayOfWeek, date])
-  @@index([tenantId, dayOfWeek])
   @@index([tenantId, date])
 }
