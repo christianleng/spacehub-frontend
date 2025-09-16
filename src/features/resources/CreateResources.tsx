@@ -14,7 +14,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  resourcesStore,
   IResourceForm,
   ResourceSchema,
 } from "@/app/core/store/resources.store";
@@ -29,10 +28,13 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import setToast, { TOAST_TYPE } from "@/components/toast";
+import { useResources } from "@/app/core/hooks/store/use-resource";
+import { mutate } from "swr";
 
 const CreateResources = observer(() => {
   const isMobile = useIsMobile();
   const [openDatePicker, setOpenDatePicker] = React.useState(false);
+  const { createResource, drawerOpen, setDrawerOpen } = useResources();
 
   const {
     register,
@@ -54,16 +56,16 @@ const CreateResources = observer(() => {
 
   const onSubmit = async (values: IResourceForm) => {
     try {
-      const created = await resourcesStore.createResource(values);
-      console.log("CREATED ::=>", created);
+      const created = await createResource(values);
       if (created) {
         reset();
-        resourcesStore.setDrawerOpen(false);
+        setDrawerOpen(false);
         setToast({
           type: TOAST_TYPE.SUCCESS,
           title: "Ressource créée",
           message: "Votre ressource a bien été ajoutée !",
         });
+        mutate("FETCH_RESOURCES");
       }
     } catch (err) {
       setToast({
@@ -76,8 +78,8 @@ const CreateResources = observer(() => {
 
   return (
     <Drawer
-      open={resourcesStore.drawerOpen}
-      onOpenChange={resourcesStore.setDrawerOpen}
+      open={drawerOpen}
+      onOpenChange={setDrawerOpen}
       direction={isMobile ? "bottom" : "right"}
     >
       <DrawerContent>
