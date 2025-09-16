@@ -1,10 +1,4 @@
-import {
-  makeObservable,
-  observable,
-  action,
-  runInAction,
-  computed,
-} from "mobx";
+import { makeObservable, observable, action } from "mobx";
 import { resourcesService } from "../services/resources.service";
 import { z } from "zod";
 
